@@ -4,7 +4,8 @@ import { UserDataProps } from '../types';
 export interface UserDocument extends UserDataProps { }
 
 const UserSchema = new Schema({
-  firstName: { type: String },
+  fullName:{ type: String },
+  confirmPassword:{ type: String },
   lastName: { type: String },
   password: { type: String },
   subject: { type: String },
@@ -14,8 +15,8 @@ const UserSchema = new Schema({
   country: { type: String },
 
   date_created: { type: String, default: new Date().toISOString() },
-  email: { type: String, required: true, unique: true },
-  phone_number: { type: String, required: true },
+  email: { type: String, },
+  phone_number: { type: String },
   role: {
     type: String,
     enum: ["superadmin", "admin", "software_developer", "content_creator", "digital_marketer", "customer"],

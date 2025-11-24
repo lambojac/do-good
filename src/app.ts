@@ -3,8 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import connectDB from './config/database';
-import userRoutes from './routes/userRoutes';
-import landingForm from "./routes/landingForm"
+import userRoutes from './modules/auth/auth.route';
+import landingForm from "./modules/landingPage/landingForm.route"
+import productRoute from './modules/product/product.route';
+import galleryRoute from './modules/gallery/gallery.route';
 import setupSwagger from './swagger';
 
 const app: Application = express();
@@ -16,8 +18,10 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 // Routes
-app.use('/api/users', userRoutes);
+app.use('/api/auth', userRoutes);
 app.use("/api/landing-page",landingForm)
+app.use('/api/products', productRoute);
+app.use('/api/gallery', galleryRoute);
 
 // Swagger
 setupSwagger(app as any);

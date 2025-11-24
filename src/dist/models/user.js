@@ -35,7 +35,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const UserSchema = new mongoose_1.Schema({
-    firstName: { type: String },
+    fullName: { type: String },
+    confirmPassword: { type: String },
     lastName: { type: String },
     password: { type: String },
     subject: { type: String },
@@ -44,8 +45,8 @@ const UserSchema = new mongoose_1.Schema({
     address: { type: String },
     country: { type: String },
     date_created: { type: String, default: new Date().toISOString() },
-    email: { type: String, required: true, unique: true },
-    phone_number: { type: String, required: true },
+    email: { type: String, },
+    phone_number: { type: String },
     role: {
         type: String,
         enum: ["superadmin", "admin", "software_developer", "content_creator", "digital_marketer", "customer"],
