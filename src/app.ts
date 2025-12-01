@@ -7,6 +7,7 @@ import userRoutes from './modules/auth/auth.route';
 import landingForm from "./modules/landingPage/landingForm.route"
 import productRoute from './modules/product/product.route';
 import galleryRoute from './modules/gallery/gallery.route';
+import sellerRoute from './modules/sellerAccount/seller.route';
 import setupSwagger from './swagger';
 
 const app: Application = express();
@@ -22,7 +23,7 @@ app.use('/api/auth', userRoutes);
 app.use("/api/landing-page",landingForm)
 app.use('/api/products', productRoute);
 app.use('/api/gallery', galleryRoute);
-
+app.use('/api/selleraccounts', sellerRoute);
 // Swagger
 setupSwagger(app as any);
 

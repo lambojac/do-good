@@ -32,56 +32,59 @@ export const createUser = async (req: Request, res: Response) => {
 
 //login
 export const loginUser = asynchandler(async (req: Request, res: Response): Promise<void> => {
-    const { email, password } = req.body;
-  
-    // Validate required fields
-    if (!email || !password) {
-      res.status(400);
-      throw new Error("Please provide correct email and password.");
-    }
-  
-    // Find user by email
-    const user = await User.findOne({ email }) as UserDocument | null;
-  
-    if (!user) {
-      res.status(400);
-      throw new Error("User not found, Please sign up!");
-    }
-  
-    
-    const passwordIsValid = await bcrypt.compare(password, user.password);
-  
-    if (passwordIsValid) {
-     
-      const token = genToken(user.id.toString()); 
-  
-     
-      res.cookie("token", token, {
-        path: "/",
-        httpOnly: true,
-        expires: new Date(Date.now() + 1000 * 24 * 60 * 60), 
-        sameSite: "none",
-        secure: true, 
-      });
-  
-      const { id,  email, role, firstName,
-        lastName,
-        phone_number} = user;
-  
-      res.status(200).json({
-        id: id.toString(), 
-        email,
-        token,
-        role,
-        firstName,
-         lastName,
-         phone_number,
-      });
-    } else {
-      res.status(400);
-      throw new Error("Invalid Email or password.");
-    }
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400);
+    throw new Error("Please provide email and password.");
+  }
+
+  const user = await User.findOne({ email }) as UserDocument | null;
+
+  if (!user) {
+    res.status(400);
+    throw new Error("User not found, Please sign up!");
+  }
+
+  const passwordIsValid = await bcrypt.compare(password, user.password);
+
+  if (!passwordIsValid) {
+    res.status(400);
+    throw new Error("Invalid email or password.");
+  }
+
+  // Generate token
+  const token = genToken(user.id.toString());
+
+  // Update last login
+  user.updatedAt = new Date(); 
+  await user.save();
+
+  // Set cookie
+  res.cookie("token", token, {
+    path: "/",
+    httpOnly: true,
+    expires: new Date(Date.now() + 1000 * 24 * 60 * 60),
+    sameSite: "none",
+    secure: true,
   });
+
+  // Return safe user info
+  const { id, role, phone_number, address } = user;
+  const fullName = (user as any).fullName ?? "";
+  const userEmail = (user as any).email ?? user.email;
+
+  res.status(200).json({
+    id,
+    fullName,
+    email: userEmail,
+    role,
+    phone: phone_number,
+    address,
+    lastLogin: user.updatedAt,
+    token,
+  });
+});
 
 
  export  const logOut = asynchandler(async (_req: Request, res: Response): Promise<void> => {
@@ -101,42 +104,53 @@ export const loginUser = asynchandler(async (req: Request, res: Response): Promi
 
 //getallusers
 export const getAllUsers = async (_req: Request, res: Response): Promise<void> => {
-    try {
-      const users = await User.find();
-      const formattedUsers = users.map((user) => ({
-        user_name: `${user.fullName}`,
-        email: user.email,
-        date_created: new Date(user.date_created).toISOString().split("T")[0], 
-        phone: user.phone_number,
-        user_role: user.role,
-        user_id: user._id.toString(),
-        status: user.isDeleted ? "non-active" : "active",
-      }));
-  
-      res.status(200).json(formattedUsers);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  };
+  try {
+    const users = await User.find().select('-password -confirmPassword');
+
+    const formattedUsers = users.map(user => ({
+      user_id: user._id.toString(),
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone_number,
+      address: user.address,
+      user_role: user.role,
+      date_created: new Date(user.date_created).toISOString().split("T")[0],
+      lastLogin: user.updatedAt,
+      status: user.isDeleted ? "non-active" : "active"
+    }));
+
+    res.status(200).json(formattedUsers);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 
 //getuserbyid
 export const getUserById = async (req: Request, res: Response) => {
-    try {
-      const user = await User.findById(req.params.id).select('-password -confirmPassword');
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' }); 
-      }
-      return res.status(200).json({
-        ...user.toObject(), 
-        status: user.isDeleted ? "non-active" : "active", 
-      }); 
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      return res.status(500).json({ error: message }); 
+  try {
+    const user = await User.findById(req.params.id).select('-password -confirmPassword');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-  };
-  
+
+    return res.status(200).json({
+      id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone_number,
+      address: user.address,
+      role: user.role,
+      lastLogin: user.updatedAt, 
+      status: user.isDeleted ? "non-active" : "active"
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return res.status(500).json({ error: message });
+  }
+};
+
 //update user
 export const updateUser = async (req: Request, res: Response) => {
   try {

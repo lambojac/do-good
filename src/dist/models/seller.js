@@ -34,37 +34,39 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const UserSchema = new mongoose_1.Schema({
-    fullName: { type: String },
-    confirmPassword: { type: String },
-    password: { type: String },
-    subject: { type: String },
-    message: { type: String },
-    gender: { type: String },
-    address: { type: String },
-    country: { type: String },
-    date_created: { type: String, default: new Date().toISOString() },
-    email: { type: String, },
-    phone_number: { type: String },
-    role: {
+const sellerAccountSchema = new mongoose_1.default.Schema({
+    userId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
+    fullName: {
         type: String,
-        enum: ["superadmin", "admin", "software_developer", "content_creator", "digital_marketer", "customer"],
-        default: "customer"
     },
-    verificationToken: String,
-    isVerified: {
-        type: Boolean,
-        default: false,
+    email: {
+        type: String,
     },
-    resetPasswordToken: { type: String },
-    resetPasswordExpires: { type: Date },
-    profilePicture: { type: String, default: null },
-    isDeleted: { type: Boolean, default: false },
-    deletedAt: { type: Date, default: null },
-    verificationCodeExpires: { type: Date },
-    lastLogin: { type: Date, default: null }
-}, {
-    timestamps: true
+    sales_volume: {
+        type: Number,
+        default: 0,
+    },
+    return_rate: {
+        type: Number,
+        default: 0.0,
+    },
+    customer_feedback_score: {
+        type: Number,
+        default: 0,
+    },
+    status: {
+        type: String,
+        enum: ["active", "inactive"],
+        default: "active",
+    },
+    created_at: {
+        type: Date,
+        default: Date.now,
+    },
 });
-exports.default = mongoose_1.default.model('User', UserSchema);
-//# sourceMappingURL=user.js.map
+exports.default = mongoose_1.default.model("SellerAccount", sellerAccountSchema);
+//# sourceMappingURL=seller.js.map

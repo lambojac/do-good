@@ -24,6 +24,11 @@ const productSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  status: {
+    type: String,
+    enum: ["available", "discontinued"],
+    default: "out_of_stock",
+  },
 });
 
 export default mongoose.model("Product", productSchema);

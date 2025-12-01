@@ -11,7 +11,6 @@ export const createProduct = async (req: Request, res: Response) => {
       const result = await cloudinary.uploader.upload(req.file.path, {
         folder: "products",
       });
-
       imageUrl = result.secure_url;
       fs.unlinkSync(req.file.path);
     }
@@ -55,29 +54,32 @@ export const getProduct = async (req: Request, res: Response) => {
   }
 };
 
-export const updateProduct = async (req: Request, res: Response): Promise<Response> => {
+export const updateProduct = async (req: Request, res: Response) => {
   try {
-    const imageUrl = req.file ? (req.file as any).path : undefined;
+    let imageUrl: string | undefined;
 
-    const updated = await Product.findByIdAndUpdate(
-      req.params.id,
-      {
-        ...req.body,
-        ...(imageUrl && { image_url: imageUrl }),
-      },
-      { new: true }
-    );
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "products",
+      });
+      imageUrl = result.secure_url;
+      fs.unlinkSync(req.file.path);
+    }
 
-    if (!updated) return res.status(404).json({ message: "Product not found" });
+    const updatedData = { ...req.body };
+    if (imageUrl) updatedData.image_url = imageUrl;
 
-    return res.json({
-      message: "Product updated successfully",
-      updated,
-    });
+    const product = await Product.findByIdAndUpdate(req.params.id, updatedData, { new: true });
+
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    res.status(200).json({ message: "Product updated successfully", product });
   } catch (err: any) {
-    return res.status(500).json({ message: err.message });
+    console.error(err);
+    res.status(500).json({ message: err.message });
   }
 };
+
 
 export const deleteProduct = async (req: Request, res: Response): Promise<Response> => {
   try {

@@ -35,10 +35,23 @@ router.delete("/:id", product_controller_1.deleteProduct);
  *             properties:
  *               name:
  *                 type: string
+ *               category:
+ *                 type: string
  *               price:
  *                 type: number
+ *               quantity:
+ *                 type: number
+ *               status:
+ *                 type: string
+ *                 enum: [available, out_of_stock, discontinued]
  *               description:
  *                 type: string
+ *               color:
+ *                 type: string
+ *               available_sizes:
+ *                 type: array
+ *                 items:
+ *                   type: string
  *               image:
  *                 type: string
  *                 format: binary
@@ -103,10 +116,23 @@ router.delete("/:id", product_controller_1.deleteProduct);
  *             properties:
  *               name:
  *                 type: string
+ *               category:
+ *                 type: string
  *               price:
  *                 type: number
+ *               quantity:
+ *                 type: number
+ *               status:
+ *                 type: string
+ *                 enum: [available, discontinued]
  *               description:
  *                 type: string
+ *               color:
+ *                 type: string
+ *               available_sizes:
+ *                 type: array
+ *                 items:
+ *                   type: string
  *               image:
  *                 type: string
  *                 format: binary

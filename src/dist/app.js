@@ -21,6 +21,7 @@ const auth_route_1 = __importDefault(require("./modules/auth/auth.route"));
 const landingForm_route_1 = __importDefault(require("./modules/landingPage/landingForm.route"));
 const product_route_1 = __importDefault(require("./modules/product/product.route"));
 const gallery_route_1 = __importDefault(require("./modules/gallery/gallery.route"));
+const seller_route_1 = __importDefault(require("./modules/sellerAccount/seller.route"));
 const swagger_1 = __importDefault(require("./swagger"));
 const app = (0, express_1.default)();
 // Middleware
@@ -33,6 +34,7 @@ app.use('/api/auth', auth_route_1.default);
 app.use("/api/landing-page", landingForm_route_1.default);
 app.use('/api/products', product_route_1.default);
 app.use('/api/gallery', gallery_route_1.default);
+app.use('/api/selleraccounts', seller_route_1.default);
 // Swagger
 (0, swagger_1.default)(app);
 // Database connection

@@ -24,6 +24,11 @@ const productSchema = new mongoose_1.default.Schema({
         type: Date,
         default: Date.now,
     },
+    status: {
+        type: String,
+        enum: ["available", "discontinued"],
+        default: "out_of_stock",
+    },
 });
 exports.default = mongoose_1.default.model("Product", productSchema);
 //# sourceMappingURL=product.js.map

@@ -63,17 +63,25 @@ const getProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.getProduct = getProduct;
 const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const imageUrl = req.file ? req.file.path : undefined;
-        const updated = yield product_1.default.findByIdAndUpdate(req.params.id, Object.assign(Object.assign({}, req.body), (imageUrl && { image_url: imageUrl })), { new: true });
-        if (!updated)
+        let imageUrl;
+        if (req.file) {
+            const result = yield cloudinary_1.default.uploader.upload(req.file.path, {
+                folder: "products",
+            });
+            imageUrl = result.secure_url;
+            fs_1.default.unlinkSync(req.file.path);
+        }
+        const updatedData = Object.assign({}, req.body);
+        if (imageUrl)
+            updatedData.image_url = imageUrl;
+        const product = yield product_1.default.findByIdAndUpdate(req.params.id, updatedData, { new: true });
+        if (!product)
             return res.status(404).json({ message: "Product not found" });
-        return res.json({
-            message: "Product updated successfully",
-            updated,
-        });
+        res.status(200).json({ message: "Product updated successfully", product });
     }
     catch (err) {
-        return res.status(500).json({ message: err.message });
+        console.error(err);
+        res.status(500).json({ message: err.message });
     }
 });
 exports.updateProduct = updateProduct;

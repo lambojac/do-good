@@ -2,6 +2,8 @@ import mongoose, { Schema } from 'mongoose';
 import { UserDataProps } from '../types';
 
 export interface UserDocument extends UserDataProps {
+  save(): unknown;
+  updatedAt: Date;
   verificationCodeExpires: Date;
   verificationCode: any;
   isVerified: any;
@@ -36,6 +38,8 @@ const UserSchema = new Schema({
   isDeleted: { type: Boolean, default: false },
   deletedAt: { type: Date, default: null },
   verificationCodeExpires: { type: Date },
+  lastLogin: { type: Date, default: null }
+
 }, {
   timestamps: true
 });

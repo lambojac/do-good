@@ -41,43 +41,49 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.createUser = createUser;
 //login
 exports.loginUser = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     const { email, password } = req.body;
-    // Validate required fields
     if (!email || !password) {
         res.status(400);
-        throw new Error("Please provide correct email and password.");
+        throw new Error("Please provide email and password.");
     }
-    // Find user by email
     const user = yield user_1.default.findOne({ email });
     if (!user) {
         res.status(400);
         throw new Error("User not found, Please sign up!");
     }
     const passwordIsValid = yield bcrypt_1.default.compare(password, user.password);
-    if (passwordIsValid) {
-        const token = (0, genToken_1.default)(user.id.toString());
-        res.cookie("token", token, {
-            path: "/",
-            httpOnly: true,
-            expires: new Date(Date.now() + 1000 * 24 * 60 * 60),
-            sameSite: "none",
-            secure: true,
-        });
-        const { id, email, role, firstName, lastName, phone_number } = user;
-        res.status(200).json({
-            id: id.toString(),
-            email,
-            token,
-            role,
-            firstName,
-            lastName,
-            phone_number,
-        });
-    }
-    else {
+    if (!passwordIsValid) {
         res.status(400);
-        throw new Error("Invalid Email or password.");
+        throw new Error("Invalid email or password.");
     }
+    // Generate token
+    const token = (0, genToken_1.default)(user.id.toString());
+    // Update last login
+    user.updatedAt = new Date();
+    yield user.save();
+    // Set cookie
+    res.cookie("token", token, {
+        path: "/",
+        httpOnly: true,
+        expires: new Date(Date.now() + 1000 * 24 * 60 * 60),
+        sameSite: "none",
+        secure: true,
+    });
+    // Return safe user info
+    const { id, role, phone_number, address } = user;
+    const fullName = (_a = user.fullName) !== null && _a !== void 0 ? _a : "";
+    const userEmail = (_b = user.email) !== null && _b !== void 0 ? _b : user.email;
+    res.status(200).json({
+        id,
+        fullName,
+        email: userEmail,
+        role,
+        phone: phone_number,
+        address,
+        lastLogin: user.updatedAt,
+        token,
+    });
 }));
 exports.logOut = (0, express_async_handler_1.default)((_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // expire the session
@@ -93,15 +99,17 @@ exports.logOut = (0, express_async_handler_1.default)((_req, res) => __awaiter(v
 //getallusers
 const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const users = yield user_1.default.find();
-        const formattedUsers = users.map((user) => ({
-            user_name: `${user.fullName}`,
-            email: user.email,
-            date_created: new Date(user.date_created).toISOString().split("T")[0],
-            phone: user.phone_number,
-            user_role: user.role,
+        const users = yield user_1.default.find().select('-password -confirmPassword');
+        const formattedUsers = users.map(user => ({
             user_id: user._id.toString(),
-            status: user.isDeleted ? "non-active" : "active",
+            fullName: user.fullName,
+            email: user.email,
+            phone: user.phone_number,
+            address: user.address,
+            user_role: user.role,
+            date_created: new Date(user.date_created).toISOString().split("T")[0],
+            lastLogin: user.updatedAt,
+            status: user.isDeleted ? "non-active" : "active"
         }));
         res.status(200).json(formattedUsers);
     }
@@ -117,7 +125,16 @@ const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        return res.status(200).json(Object.assign(Object.assign({}, user.toObject()), { status: user.isDeleted ? "non-active" : "active" }));
+        return res.status(200).json({
+            id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            phone: user.phone_number,
+            address: user.address,
+            role: user.role,
+            lastLogin: user.updatedAt,
+            status: user.isDeleted ? "non-active" : "active"
+        });
     }
     catch (error) {
         const message = error instanceof Error ? error.message : String(error);
