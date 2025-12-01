@@ -104,7 +104,7 @@ export const getAllUsers = async (_req: Request, res: Response): Promise<void> =
     try {
       const users = await User.find();
       const formattedUsers = users.map((user) => ({
-        fullName: `${user.fullName}`,
+        user_name: `${user.fullName}`,
         email: user.email,
         date_created: new Date(user.date_created).toISOString().split("T")[0], 
         phone: user.phone_number,
