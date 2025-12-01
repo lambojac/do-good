@@ -95,7 +95,7 @@ const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const users = yield user_1.default.find();
         const formattedUsers = users.map((user) => ({
-            fullName: `${user.fullName}`,
+            user_name: `${user.fullName}`,
             email: user.email,
             date_created: new Date(user.date_created).toISOString().split("T")[0],
             phone: user.phone_number,
