@@ -37,7 +37,6 @@ const mongoose_1 = __importStar(require("mongoose"));
 const UserSchema = new mongoose_1.Schema({
     fullName: { type: String },
     confirmPassword: { type: String },
-    lastName: { type: String },
     password: { type: String },
     subject: { type: String },
     message: { type: String },
@@ -52,13 +51,17 @@ const UserSchema = new mongoose_1.Schema({
         enum: ["superadmin", "admin", "software_developer", "content_creator", "digital_marketer", "customer"],
         default: "customer"
     },
-    zoom_username: { type: String },
-    skype_username: { type: String },
+    verificationToken: String,
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
     profilePicture: { type: String, default: null },
     isDeleted: { type: Boolean, default: false },
-    deletedAt: { type: Date, default: null }
+    deletedAt: { type: Date, default: null },
+    verificationCodeExpires: { type: Date },
 }, {
     timestamps: true
 });

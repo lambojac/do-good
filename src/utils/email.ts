@@ -1,25 +1,40 @@
-import nodemailer from 'nodemailer';
+import sgMail from "@sendgrid/mail";
+import dotenv from "dotenv";
 
-const transporter = nodemailer.createTransport({
-  service: 'Gmail',
-  auth: {
-    user: process.env.SMTP_EMAIL,  // Use environment variables
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+dotenv.config();
 
-/**
- * Send an email
- * @param to Recipient's email
- * @param subject Email subject
- * @param text Email body text
- */
-export const sendEmail = async (to: string, subject: string, text: string) => {
-  const mailOptions = {
-    to,
-    subject,
-    text,
-  };
+sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
-  return transporter.sendMail(mailOptions);
+export const sendEmail = async (
+  to: string,
+  subject: string,
+  html: string
+) => {
+  try {
+    await sgMail.send({
+      to,
+      from: process.env.FROM_EMAIL!, // must be verified in SendGrid
+      subject,
+      html,
+    });
+
+    console.log(`Verification email sent to ${to}`);
+  } catch (error) {
+    console.error("Error sending verification email:", error);
+    throw error;
+  }
+};
+
+export const changePasswordEmail = async (email: string, code: string) => {
+  try {
+    await sgMail.send({
+      to: email,
+      from: process.env.FROM_EMAIL!,
+      subject: "Change Password",
+      text: `Your OTP for password change is: ${code}. It expires in 10 minutes.`,
+    });
+    console.log(`Password change email sent to ${email}`);
+  } catch (error) {
+    console.error("Error sending password change email:", error);
+  }
 };

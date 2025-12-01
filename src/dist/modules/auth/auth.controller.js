@@ -95,7 +95,7 @@ const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const users = yield user_1.default.find();
         const formattedUsers = users.map((user) => ({
-            user_name: `${user.firstName} ${user.lastName}`,
+            fullName: `${user.fullName}`,
             email: user.email,
             date_created: new Date(user.date_created).toISOString().split("T")[0],
             phone: user.phone_number,
@@ -113,7 +113,7 @@ exports.getAllUsers = getAllUsers;
 //getuserbyid
 const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield user_1.default.findById(req.params.id).select('-password');
+        const user = yield user_1.default.findById(req.params.id).select('-password -confirmPassword');
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }

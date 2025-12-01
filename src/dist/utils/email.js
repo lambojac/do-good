@@ -12,28 +12,40 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendEmail = void 0;
-const nodemailer_1 = __importDefault(require("nodemailer"));
-const transporter = nodemailer_1.default.createTransport({
-    service: 'Gmail',
-    auth: {
-        user: process.env.SMTP_EMAIL, // Use environment variables
-        pass: process.env.SMTP_PASSWORD,
-    },
-});
-/**
- * Send an email
- * @param to Recipient's email
- * @param subject Email subject
- * @param text Email body text
- */
-const sendEmail = (to, subject, text) => __awaiter(void 0, void 0, void 0, function* () {
-    const mailOptions = {
-        to,
-        subject,
-        text,
-    };
-    return transporter.sendMail(mailOptions);
+exports.changePasswordEmail = exports.sendEmail = void 0;
+const mail_1 = __importDefault(require("@sendgrid/mail"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+mail_1.default.setApiKey(process.env.SENDGRID_API_KEY);
+const sendEmail = (to, subject, html) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield mail_1.default.send({
+            to,
+            from: process.env.FROM_EMAIL, // must be verified in SendGrid
+            subject,
+            html,
+        });
+        console.log(`Verification email sent to ${to}`);
+    }
+    catch (error) {
+        console.error("Error sending verification email:", error);
+        throw error;
+    }
 });
 exports.sendEmail = sendEmail;
+const changePasswordEmail = (email, code) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield mail_1.default.send({
+            to: email,
+            from: process.env.FROM_EMAIL,
+            subject: "Change Password",
+            text: `Your OTP for password change is: ${code}. It expires in 10 minutes.`,
+        });
+        console.log(`Password change email sent to ${email}`);
+    }
+    catch (error) {
+        console.error("Error sending password change email:", error);
+    }
+});
+exports.changePasswordEmail = changePasswordEmail;
 //# sourceMappingURL=email.js.map

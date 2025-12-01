@@ -104,7 +104,7 @@ export const getAllUsers = async (_req: Request, res: Response): Promise<void> =
     try {
       const users = await User.find();
       const formattedUsers = users.map((user) => ({
-        user_name: `${user.firstName} ${user.lastName}`,
+        fullName: `${user.fullName}`,
         email: user.email,
         date_created: new Date(user.date_created).toISOString().split("T")[0], 
         phone: user.phone_number,
@@ -123,7 +123,7 @@ export const getAllUsers = async (_req: Request, res: Response): Promise<void> =
 //getuserbyid
 export const getUserById = async (req: Request, res: Response) => {
     try {
-      const user = await User.findById(req.params.id).select('-password');
+      const user = await User.findById(req.params.id).select('-password -confirmPassword');
       if (!user) {
         return res.status(404).json({ message: 'User not found' }); 
       }
