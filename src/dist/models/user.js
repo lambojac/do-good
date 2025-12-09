@@ -36,7 +36,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const UserSchema = new mongoose_1.Schema({
     fullName: { type: String },
-    confirmPassword: { type: String },
     password: { type: String },
     subject: { type: String },
     message: { type: String },
@@ -48,7 +47,7 @@ const UserSchema = new mongoose_1.Schema({
     phone_number: { type: String },
     role: {
         type: String,
-        enum: ["superadmin", "admin", "software_developer", "content_creator", "digital_marketer", "customer"],
+        enum: ["superadmin", "admin", "vendor", "customer"],
         default: "customer"
     },
     verificationToken: String,

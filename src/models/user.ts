@@ -11,7 +11,6 @@ export interface UserDocument extends UserDataProps {
 
 const UserSchema = new Schema({
   fullName:{ type: String },
-  confirmPassword:{ type: String },
   password: { type: String },
   subject: { type: String },
   message: { type: String },
@@ -23,10 +22,10 @@ const UserSchema = new Schema({
   email: { type: String, },
   phone_number: { type: String },
   role: {
-    type: String,
-    enum: ["superadmin", "admin", "software_developer", "content_creator", "digital_marketer", "customer"],
-    default: "customer"
-  },
+  type: String,
+  enum: ["superadmin", "admin", "vendor", "customer"],
+  default: "customer"
+},
   verificationToken: String,
   isVerified: {
     type: Boolean,

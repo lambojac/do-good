@@ -1,5 +1,5 @@
 import express from 'express';
-import { createUser, deleteUser, getAllUsers, getUserById, loginUser, logOut, restoreUser, updateUser } from './auth.controller';
+import { createUser, deleteUser, getAllUsers, getUserById, loginUser, logOut, restoreUser, updateUser,updateUserRole } from './auth.controller';
 
 const router = express.Router();
 
@@ -285,4 +285,7 @@ router.delete('/:id', deleteUser);
  *         description: Server error
  */
 router.patch('/:id/restore', restoreUser);
+
+router.put("/role/:id",  updateUserRole);
+
 export default router;

@@ -12,20 +12,30 @@ import { sendEmail } from '../../utils/email';
 // create user
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { fullName, password, confirmPassword,  email  } = req.body;
+    const { fullName, password, confirmPassword, email } = req.body;
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ error: "User already exists" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = new User({
       fullName,
       password: hashedPassword,
       email,
-      confirmPassword
     });
 
     const savedUser = await newUser.save();
-    res.status(201).json(savedUser);
+
+    return res.status(201).json(savedUser);
   } catch (error: any) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -280,3 +290,38 @@ export const resetPassword= async (req:Request, res:Response) => {
       return res.status(500).json({ message: 'Server error' });
     }
   }
+//update user role
+export const updateUserRole = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    
+    const allowedRoles = ["superadmin", "admin", "vendor", "customer"];
+
+    if (!role || !allowedRoles.includes(role)) {
+      return res.status(400).json({
+        message: `Invalid role. Allowed roles: ${allowedRoles.join(", ")}`
+      });
+    }
+
+    // Update role
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { role },
+      { new: true }
+    ).select("-password -confirmPassword");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      message: "User role updated successfully",
+      user: updatedUser
+    });
+
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+};

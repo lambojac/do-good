@@ -273,5 +273,6 @@ router.delete('/:id', auth_controller_1.deleteUser);
  *         description: Server error
  */
 router.patch('/:id/restore', auth_controller_1.restoreUser);
+router.put("/role/:id", auth_controller_1.updateUserRole);
 exports.default = router;
 //# sourceMappingURL=auth.route.js.map

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.restoreUser = exports.deleteUser = exports.updateUser = exports.getUserById = exports.getAllUsers = exports.logOut = exports.loginUser = exports.createUser = void 0;
+exports.updateUserRole = exports.resetPassword = exports.forgotPassword = exports.restoreUser = exports.deleteUser = exports.updateUser = exports.getUserById = exports.getAllUsers = exports.logOut = exports.loginUser = exports.createUser = void 0;
 const user_1 = __importDefault(require("../../models/user"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
@@ -24,18 +24,24 @@ const email_1 = require("../../utils/email");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { fullName, password, confirmPassword, email } = req.body;
+        if (password !== confirmPassword) {
+            return res.status(400).json({ error: "Passwords do not match" });
+        }
+        const userExists = yield user_1.default.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ error: "User already exists" });
+        }
         const hashedPassword = yield bcrypt_1.default.hash(password, 10);
         const newUser = new user_1.default({
             fullName,
             password: hashedPassword,
             email,
-            confirmPassword
         });
         const savedUser = yield newUser.save();
-        res.status(201).json(savedUser);
+        return res.status(201).json(savedUser);
     }
     catch (error) {
-        res.status(400).json({ error: error.message });
+        return res.status(400).json({ error: error.message });
     }
 });
 exports.createUser = createUser;
@@ -250,4 +256,30 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.resetPassword = resetPassword;
+//update user role
+const updateUserRole = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+        const allowedRoles = ["superadmin", "admin", "vendor", "customer"];
+        if (!role || !allowedRoles.includes(role)) {
+            return res.status(400).json({
+                message: `Invalid role. Allowed roles: ${allowedRoles.join(", ")}`
+            });
+        }
+        // Update role
+        const updatedUser = yield user_1.default.findByIdAndUpdate(id, { role }, { new: true }).select("-password -confirmPassword");
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        return res.status(200).json({
+            message: "User role updated successfully",
+            user: updatedUser
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+exports.updateUserRole = updateUserRole;
 //# sourceMappingURL=auth.controller.js.map

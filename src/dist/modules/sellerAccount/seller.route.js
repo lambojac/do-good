@@ -14,9 +14,45 @@ const router = express_1.default.Router();
  */
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     Seller:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: 64dfad98123b4567890abc12
+ *         userId:
+ *           type: string
+ *           example: 64dfad98123b4567890abc10
+ *         fullName:
+ *           type: string
+ *           example: John Doe
+ *         email:
+ *           type: string
+ *           example: johndoe@email.com
+ *         sales_volume:
+ *           type: number
+ *           example: 1200
+ *         return_rate:
+ *           type: number
+ *           example: 2.5
+ *         customer_feedback_score:
+ *           type: number
+ *           example: 4.8
+ *         status:
+ *           type: string
+ *           enum: [active, inactive]
+ *           example: active
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ */
+/**
+ * @swagger
  * /selleraccounts:
  *   post:
- *     summary: Create a new seller account
+ *     summary: Create a new seller account from an existing user
  *     tags: [SellerAccounts]
  *     requestBody:
  *       required: true
@@ -24,25 +60,27 @@ const router = express_1.default.Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - userId
  *             properties:
- *               firstname:
+ *               userId:
  *                 type: string
- *               lastname:
- *                 type: string
- *               email:
- *                 type: string
- *               sales_volume:
- *                 type: number
- *               return_rate:
- *                 type: number
- *               customer_feedback_score:
- *                 type: number
- *               status:
- *                 type: string
- *                 enum: [active, inactive]
+ *                 example: 64dfad98123b4567890abc10
  *     responses:
  *       201:
- *         description: Seller account created
+ *         description: Seller account created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Seller account created successfully
+ *                 seller:
+ *                   $ref: '#/components/schemas/Seller'
+ *       404:
+ *         description: User not found
  *       500:
  *         description: Server error
  */
@@ -55,6 +93,15 @@ const router = express_1.default.Router();
  *     responses:
  *       200:
  *         description: List of seller accounts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sellers:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Seller'
  *       500:
  *         description: Server error
  */
@@ -62,7 +109,7 @@ const router = express_1.default.Router();
  * @swagger
  * /selleraccounts/{id}:
  *   get:
- *     summary: Get seller account by ID
+ *     summary: Get a seller account by ID
  *     tags: [SellerAccounts]
  *     parameters:
  *       - in: path
@@ -70,9 +117,17 @@ const router = express_1.default.Router();
  *         required: true
  *         schema:
  *           type: string
+ *           example: 64dfad98123b4567890abc12
  *     responses:
  *       200:
  *         description: Seller found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 seller:
+ *                   $ref: '#/components/schemas/Seller'
  *       404:
  *         description: Seller not found
  *       500:
@@ -91,15 +146,13 @@ const router = express_1.default.Router();
  *         schema:
  *           type: string
  *     requestBody:
- *       required: false
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               firstname:
- *                 type: string
- *               lastname:
+ *               fullName:
  *                 type: string
  *               email:
  *                 type: string
@@ -114,7 +167,7 @@ const router = express_1.default.Router();
  *                 enum: [active, inactive]
  *     responses:
  *       200:
- *         description: Seller updated
+ *         description: Seller updated successfully
  *       404:
  *         description: Seller not found
  *       500:
@@ -134,7 +187,7 @@ const router = express_1.default.Router();
  *           type: string
  *     responses:
  *       200:
- *         description: Seller deleted
+ *         description: Seller deleted successfully
  *       404:
  *         description: Seller not found
  *       500:
