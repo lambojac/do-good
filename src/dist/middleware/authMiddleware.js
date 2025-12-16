@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const user_1 = __importDefault(require("../models/user"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
+// Middleware to check authentication and admin role
 const Secure = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const authHeader = req.headers.authorization;
@@ -31,12 +32,17 @@ const Secure = (0, express_async_handler_1.default)((req, res, next) => __awaite
             res.status(401);
             throw new Error("User not found");
         }
+        // Check if the user is an admin
+        if (user.role !== "admin") {
+            res.status(403);
+            throw new Error("Access denied, admin only");
+        }
+        // Attach user to request object
         req.user = user;
         next();
     }
     catch (error) {
-        res.status(401);
-        throw new Error("Not authorized, please login");
+        res.status(error.status || 401).json({ message: error.message || "Not authorized" });
     }
 }));
 exports.default = Secure;

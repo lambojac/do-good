@@ -10,7 +10,7 @@ const router = express_1.default.Router();
  * @swagger
  * tags:
  *   name: SellerAccounts
- *   description: Seller account management
+ *   description: Seller account management API
  */
 /**
  * @swagger
@@ -50,22 +50,18 @@ const router = express_1.default.Router();
  */
 /**
  * @swagger
- * /selleraccounts:
+ * /selleraccounts/{userId}:
  *   post:
  *     summary: Create a new seller account from an existing user
  *     tags: [SellerAccounts]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - userId
- *             properties:
- *               userId:
- *                 type: string
- *                 example: 64dfad98123b4567890abc10
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: Existing user ID
+ *         schema:
+ *           type: string
+ *           example: 64dfad98123b4567890abc10
  *     responses:
  *       201:
  *         description: Seller account created successfully
@@ -79,6 +75,19 @@ const router = express_1.default.Router();
  *                   example: Seller account created successfully
  *                 seller:
  *                   $ref: '#/components/schemas/Seller'
+ *                 updatedUser:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     fullName:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *       400:
+ *         description: Seller account already exists
  *       404:
  *         description: User not found
  *       500:
@@ -115,6 +124,7 @@ const router = express_1.default.Router();
  *       - in: path
  *         name: id
  *         required: true
+ *         description: Seller account ID
  *         schema:
  *           type: string
  *           example: 64dfad98123b4567890abc12
@@ -143,6 +153,7 @@ const router = express_1.default.Router();
  *       - in: path
  *         name: id
  *         required: true
+ *         description: Seller account ID
  *         schema:
  *           type: string
  *     requestBody:
@@ -168,6 +179,16 @@ const router = express_1.default.Router();
  *     responses:
  *       200:
  *         description: Seller updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Seller updated
+ *                 seller:
+ *                   $ref: '#/components/schemas/Seller'
  *       404:
  *         description: Seller not found
  *       500:
@@ -183,17 +204,26 @@ const router = express_1.default.Router();
  *       - in: path
  *         name: id
  *         required: true
+ *         description: Seller account ID
  *         schema:
  *           type: string
  *     responses:
  *       200:
  *         description: Seller deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Seller deleted
  *       404:
  *         description: Seller not found
  *       500:
  *         description: Server error
  */
-router.post("/", seller_controller_1.createSellerAccount);
+router.post("/:userId", seller_controller_1.createSellerAccount);
 router.get("/", seller_controller_1.getSellers);
 router.get("/:id", seller_controller_1.getSeller);
 router.put("/:id", seller_controller_1.updateSeller);

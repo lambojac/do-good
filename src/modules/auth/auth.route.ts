@@ -1,13 +1,64 @@
 import express from 'express';
 import { createUser, deleteUser, getAllUsers, getUserById, loginUser, logOut, restoreUser, updateUser,updateUserRole } from './auth.controller';
-
+import Secure from "../../middleware/authMiddleware";
 const router = express.Router();
-
 /**
  * @swagger
  * tags:
  *   name: Users
  *   description: API endpoints for managing users
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: 6798fcd938efc0fde951e9e7
+ *         fullName:
+ *           type: string
+ *           example: John Doe
+ *         email:
+ *           type: string
+ *           example: johndoe@example.com
+ *         phone_number:
+ *           type: string
+ *           example: "+1234567890"
+ *         address:
+ *           type: string
+ *           example: "123 Main Street"
+ *         residentialAddress:
+ *           type: string
+ *           example: "123 Main Street"
+ *         deliveryAddress:
+ *           type: string
+ *           example: "456 Delivery St"
+ *         country:
+ *           type: string
+ *           example: USA
+ *         role:
+ *           type: string
+ *           enum: [superadmin, admin, vendor, customer]
+ *           example: customer
+ *         profilePicture:
+ *           type: string
+ *           example: "https://res.cloudinary.com/.../profile.jpg"
+ *         isDeleted:
+ *           type: boolean
+ *           example: false
+ *         deletedAt:
+ *           type: string
+ *           format: date-time
+ *         lastLogin:
+ *           type: string
+ *           format: date-time
+ *         date_created:
+ *           type: string
+ *           format: date-time
  */
 
 /**
@@ -23,32 +74,34 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - firstName
- *               - lastName
+ *               - fullName
  *               - email
  *               - password
+ *               - confirmPassword
  *               - phone_number
  *               - role
  *             properties:
- *               firstName:
+ *               fullName:
  *                 type: string
- *                 example: "John"
- *               lastName:
- *                 type: string
- *                 example: "Doe"
  *               email:
  *                 type: string
- *                 example: "johndoe@example.com"
  *               password:
  *                 type: string
- *                 example: "StrongPass123$"
+ *               confirmPassword:
+ *                 type: string
  *               phone_number:
  *                 type: string
- *                 example: "+1234567890"
  *               role:
  *                 type: string
- *                 enum: [user, admin]
- *                 example: "user"
+ *                 enum: [superadmin, admin, vendor, customer]
+ *               address:
+ *                 type: string
+ *               residentialAddress:
+ *                 type: string
+ *               deliveryAddress:
+ *                 type: string
+ *               country:
+ *                 type: string
  *     responses:
  *       201:
  *         description: User created successfully
@@ -57,10 +110,8 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/User'
  *       400:
- *         description: Invalid input
+ *         description: Invalid input or user already exists
  */
-router.post('/', createUser);
-
 
 /**
  * @swagger
@@ -80,10 +131,8 @@ router.post('/', createUser);
  *             properties:
  *               email:
  *                 type: string
- *                 example: "johndoe@example.com"
  *               password:
  *                 type: string
- *                 example: "StrongPass123$"
  *     responses:
  *       200:
  *         description: Login successful
@@ -94,21 +143,24 @@ router.post('/', createUser);
  *               properties:
  *                 id:
  *                   type: string
- *                   example: "6798fcd938efc0fde951e9e7"
+ *                 fullName:
+ *                   type: string
  *                 email:
  *                   type: string
- *                   example: "johndoe@example.com"
+ *                 phoneNumber:
+ *                   type: string
  *                 role:
  *                   type: string
- *                   example: "user"
+ *                 address:
+ *                   type: string
+ *                 lastLogin:
+ *                   type: string
+ *                   format: date-time
  *                 token:
  *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *       400:
  *         description: Invalid credentials or missing fields
  */
-router.post('/login', loginUser);
-
 
 /**
  * @swagger
@@ -126,10 +178,8 @@ router.post('/login', loginUser);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "You are successfully logged out"
+ *                   example: "you are Sucessfully logged out"
  */
-router.get('/logout', logOut);
-
 
 /**
  * @swagger
@@ -139,34 +189,14 @@ router.get('/logout', logOut);
  *     tags: [Users]
  *     responses:
  *       200:
- *         description: List of users retrieved successfully
+ *         description: List of users
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 type: object
- *                 properties:
- *                   user_name:
- *                     type: string
- *                     example: "John Doe"
- *                   email:
- *                     type: string
- *                     example: "johndoe@example.com"
- *                   phone:
- *                     type: string
- *                     example: "+1234567890"
- *                   user_role:
- *                     type: string
- *                     example: "admin"
- *                   status:
- *                     type: string
- *                     example: "active"
- *       500:
- *         description: Server error
+ *                 $ref: '#/components/schemas/User'
  */
-router.get('/get-all-users', getAllUsers);
-
 
 /**
  * @swagger
@@ -180,7 +210,6 @@ router.get('/get-all-users', getAllUsers);
  *         required: true
  *         schema:
  *           type: string
- *         description: The user ID
  *     responses:
  *       200:
  *         description: User found
@@ -190,17 +219,9 @@ router.get('/get-all-users', getAllUsers);
  *               $ref: '#/components/schemas/User'
  *       404:
  *         description: User not found
- *       500:
- *         description: Server error
- */
-router.get('/:id', getUserById);
-
-
-/**
- * @swagger
- * /auth/{id}:
+ *
  *   patch:
- *     summary: Update user by ID
+ *     summary: Update a user by ID
  *     tags: [Users]
  *     parameters:
  *       - name: id
@@ -215,9 +236,7 @@ router.get('/:id', getUserById);
  *           schema:
  *             type: object
  *             properties:
- *               firstName:
- *                 type: string
- *               lastName:
+ *               fullName:
  *                 type: string
  *               email:
  *                 type: string
@@ -235,17 +254,9 @@ router.get('/:id', getUserById);
  *         description: User updated successfully
  *       404:
  *         description: User not found
- *       500:
- *         description: Server error
- */
-router.patch('/:id', updateUser);
-
-
-/**
- * @swagger
- * /auth/{id}:
+ *
  *   delete:
- *     summary: Soft delete (deactivate) a user
+ *     summary: Deactivate a user (soft delete)
  *     tags: [Users]
  *     parameters:
  *       - name: id
@@ -258,11 +269,7 @@ router.patch('/:id', updateUser);
  *         description: User deactivated successfully
  *       404:
  *         description: User not found
- *       500:
- *         description: Server error
  */
-router.delete('/:id', deleteUser);
-
 
 /**
  * @swagger
@@ -281,11 +288,99 @@ router.delete('/:id', deleteUser);
  *         description: User restored successfully
  *       404:
  *         description: User not found
+ */
+
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Request password reset email
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Reset email sent
+ *       404:
+ *         description: User not found
  *       500:
  *         description: Server error
  */
-router.patch('/:id/restore', restoreUser);
 
-router.put("/role/:id",  updateUserRole);
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Reset user password using token
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               confirmPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         description: Invalid or expired token / passwords do not match
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /auth/role/{id}:
+ *   put:
+ *     summary: Update user role
+ *     tags: [Users]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [superadmin, admin, vendor, customer]
+ *     responses:
+ *       200:
+ *         description: User role updated successfully
+ *       400:
+ *         description: Invalid role
+ *       404:
+ *         description: User not found
+ */
+
+router.post('/', createUser);
+router.post('/login', loginUser);
+router.get('/logout', logOut);
+router.get('/get-all-users', getAllUsers);
+router.get('/:id', getUserById);
+router.patch('/:id', updateUser);
+router.delete('/:id', deleteUser);
+router.patch('/:id/restore', restoreUser);
+router.put("/role/:id",Secure,updateUserRole);
 
 export default router;

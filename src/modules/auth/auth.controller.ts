@@ -12,8 +12,7 @@ import { sendEmail } from '../../utils/email';
 // create user
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { fullName, password, confirmPassword, email } = req.body;
-
+    const { fullName, password, confirmPassword, email, phone_number, address,residentialAddress, deliveryAddress } = req.body;
     if (password !== confirmPassword) {
       return res.status(400).json({ error: "Passwords do not match" });
     }
@@ -29,6 +28,10 @@ export const createUser = async (req: Request, res: Response) => {
       fullName,
       password: hashedPassword,
       email,
+      phone_number, 
+      address,
+      residentialAddress,
+      deliveryAddress,
     });
 
     const savedUser = await newUser.save();
@@ -42,14 +45,14 @@ export const createUser = async (req: Request, res: Response) => {
 
 //login
 export const loginUser = asynchandler(async (req: Request, res: Response): Promise<void> => {
-  const { email, password } = req.body;
+  const { email: loginEmail, password } = req.body;
 
-  if (!email || !password) {
+  if (!loginEmail || !password) {
     res.status(400);
     throw new Error("Please provide email and password.");
   }
 
-  const user = await User.findOne({ email }) as UserDocument | null;
+  const user = await User.findOne({ email: loginEmail });
 
   if (!user) {
     res.status(400);
@@ -63,14 +66,11 @@ export const loginUser = asynchandler(async (req: Request, res: Response): Promi
     throw new Error("Invalid email or password.");
   }
 
-  // Generate token
   const token = genToken(user.id.toString());
 
-  // Update last login
-  user.updatedAt = new Date(); 
+  user.updatedAt = new Date();
   await user.save();
 
-  // Set cookie
   res.cookie("token", token, {
     path: "/",
     httpOnly: true,
@@ -79,22 +79,30 @@ export const loginUser = asynchandler(async (req: Request, res: Response): Promi
     secure: true,
   });
 
-  // Return safe user info
-  const { id, role, phone_number, address } = user;
-  const fullName = (user as any).fullName ?? "";
-  const userEmail = (user as any).email ?? user.email;
+  const {
+    id,
+    fullName,
+    email,
+    phone_number,
+    role,
+    address,
+    updatedAt,
+    createdAt
+  } = user;
 
   res.status(200).json({
     id,
     fullName,
-    email: userEmail,
+    email,
+    phoneNumber: phone_number,
+    createdAt,
     role,
-    phone: phone_number,
     address,
-    lastLogin: user.updatedAt,
+    lastLogin: updatedAt,
     token,
   });
 });
+
 
 
  export  const logOut = asynchandler(async (_req: Request, res: Response): Promise<void> => {

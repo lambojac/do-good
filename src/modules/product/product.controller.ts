@@ -14,9 +14,10 @@ export const createProduct = async (req: Request, res: Response) => {
       imageUrl = result.secure_url;
       fs.unlinkSync(req.file.path);
     }
-
+const { status, ...rest } = req.body;
     const product = new Product({
-      ...req.body,
+       ...rest,
+      ...(status && { status }), 
       image_url: imageUrl,
     });
 
@@ -90,5 +91,44 @@ export const deleteProduct = async (req: Request, res: Response): Promise<Respon
     return res.json({ message: "Product deleted successfully" });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
+  }
+};
+
+
+// Approve a product by ID
+export const approveProduct = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { status: "available" },
+      { new: true }
+    );
+
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    res.status(200).json({ message: "Product approved successfully", product });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Decline a product by ID
+export const declineProduct = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { status: "discontinued" },
+      { new: true }
+    );
+
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    res.status(200).json({ message: "Product declined successfully", product });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
   }
 };

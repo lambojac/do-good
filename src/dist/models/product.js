@@ -14,6 +14,10 @@ const productSchema = new mongoose_1.default.Schema({
         type: Number,
         required: true,
     },
+    quantity: {
+        type: Number,
+        required: true,
+    },
     image_url: {
         type: String,
     },
@@ -26,7 +30,7 @@ const productSchema = new mongoose_1.default.Schema({
     },
     status: {
         type: String,
-        enum: ["available", "discontinued"],
+        enum: ["available", "discontinued", "out_of_stock", "draft"],
         default: "out_of_stock",
     },
 });

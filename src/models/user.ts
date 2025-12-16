@@ -4,9 +4,16 @@ import { UserDataProps } from '../types';
 export interface UserDocument extends UserDataProps {
   save(): unknown;
   updatedAt: Date;
+  createdAt: Date;
   verificationCodeExpires: Date;
   verificationCode: any;
   isVerified: any;
+  fullName?: string;
+  email: string;
+  phone_number: string;
+  password: string;
+  role: string;
+  address: string;
 }
 
 const UserSchema = new Schema({
@@ -15,7 +22,8 @@ const UserSchema = new Schema({
   subject: { type: String },
   message: { type: String },
   gender: { type: String },
-  address: { type: String },
+   residentialAddress: { type: String }, 
+  deliveryAddress: { type: String }, 
   country: { type: String },
 
   date_created: { type: String, default: new Date().toISOString() },

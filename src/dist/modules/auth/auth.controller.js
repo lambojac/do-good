@@ -23,7 +23,7 @@ const email_1 = require("../../utils/email");
 // create user
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { fullName, password, confirmPassword, email } = req.body;
+        const { fullName, password, confirmPassword, email, phone_number, address, residentialAddress, deliveryAddress } = req.body;
         if (password !== confirmPassword) {
             return res.status(400).json({ error: "Passwords do not match" });
         }
@@ -36,6 +36,10 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             fullName,
             password: hashedPassword,
             email,
+            phone_number,
+            address,
+            residentialAddress,
+            deliveryAddress,
         });
         const savedUser = yield newUser.save();
         return res.status(201).json(savedUser);
@@ -47,13 +51,12 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.createUser = createUser;
 //login
 exports.loginUser = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
-    const { email, password } = req.body;
-    if (!email || !password) {
+    const { email: loginEmail, password } = req.body;
+    if (!loginEmail || !password) {
         res.status(400);
         throw new Error("Please provide email and password.");
     }
-    const user = yield user_1.default.findOne({ email });
+    const user = yield user_1.default.findOne({ email: loginEmail });
     if (!user) {
         res.status(400);
         throw new Error("User not found, Please sign up!");
@@ -63,12 +66,9 @@ exports.loginUser = (0, express_async_handler_1.default)((req, res) => __awaiter
         res.status(400);
         throw new Error("Invalid email or password.");
     }
-    // Generate token
     const token = (0, genToken_1.default)(user.id.toString());
-    // Update last login
     user.updatedAt = new Date();
     yield user.save();
-    // Set cookie
     res.cookie("token", token, {
         path: "/",
         httpOnly: true,
@@ -76,18 +76,16 @@ exports.loginUser = (0, express_async_handler_1.default)((req, res) => __awaiter
         sameSite: "none",
         secure: true,
     });
-    // Return safe user info
-    const { id, role, phone_number, address } = user;
-    const fullName = (_a = user.fullName) !== null && _a !== void 0 ? _a : "";
-    const userEmail = (_b = user.email) !== null && _b !== void 0 ? _b : user.email;
+    const { id, fullName, email, phone_number, role, address, updatedAt, createdAt } = user;
     res.status(200).json({
         id,
         fullName,
-        email: userEmail,
+        email,
+        phoneNumber: phone_number,
+        createdAt,
         role,
-        phone: phone_number,
         address,
-        lastLogin: user.updatedAt,
+        lastLogin: updatedAt,
         token,
     });
 }));

@@ -4,16 +4,20 @@ import User from "../../models/user";
 
 export const createSellerAccount = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.body;
-
-    // Get user first
-    const user = await User.findById(userId);
-
+    const { userId } = req.params;
+    const user = await User.findById(userId).select("-password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Create seller account and copy data from User
+    const existingSeller = await SellerAccount.findOne({ userId });
+    if (existingSeller) {
+      return res.status(400).json({ message: "Seller account already exists", seller: existingSeller });
+    }
+
+    user.role = "vendor";
+    await user.save();
+
     const seller = new SellerAccount({
       userId,
       fullName: user.fullName,
@@ -21,15 +25,15 @@ export const createSellerAccount = async (req: Request, res: Response) => {
     });
 
     await seller.save();
+    await seller.populate("userId", "fullName email role");
 
-    // Populate for response only (not needed for saving)
-    await seller.populate("userId", "fullName email");
-
+  
     res.status(201).json({
       message: "Seller account created successfully",
       seller,
+      updatedUser: user, 
     });
-
+    
   } catch (err: any) {
     console.error(err);
     res.status(500).json({ message: err.message });
@@ -38,9 +42,10 @@ export const createSellerAccount = async (req: Request, res: Response) => {
 
 
 // Get all sellers
+// Get all sellers
 export const getSellers = async (req: Request, res: Response) => {
   try {
-    const sellers = await SellerAccount.find();
+    const sellers = await SellerAccount.find().populate("userId", "-password");
     res.status(200).json({ sellers });
   } catch (err: any) {
     console.error(err);
@@ -51,7 +56,7 @@ export const getSellers = async (req: Request, res: Response) => {
 // Get seller by ID
 export const getSeller = async (req: Request, res: Response) => {
   try {
-    const seller = await SellerAccount.findById(req.params.id);
+    const seller = await SellerAccount.findById(req.params.id).populate("userId", "-password");
     if (!seller) return res.status(404).json({ message: "Seller not found" });
     res.status(200).json({ seller });
   } catch (err: any) {
@@ -59,6 +64,7 @@ export const getSeller = async (req: Request, res: Response) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 // Update seller
 export const updateSeller = async (req: Request, res: Response) => {

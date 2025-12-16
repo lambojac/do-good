@@ -17,24 +17,28 @@ const seller_1 = __importDefault(require("../../models/seller"));
 const user_1 = __importDefault(require("../../models/user"));
 const createSellerAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { userId } = req.body;
-        // Get user first
-        const user = yield user_1.default.findById(userId);
+        const { userId } = req.params;
+        const user = yield user_1.default.findById(userId).select("-password");
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        // Create seller account and copy data from User
+        const existingSeller = yield seller_1.default.findOne({ userId });
+        if (existingSeller) {
+            return res.status(400).json({ message: "Seller account already exists", seller: existingSeller });
+        }
+        user.role = "vendor";
+        yield user.save();
         const seller = new seller_1.default({
             userId,
             fullName: user.fullName,
             email: user.email,
         });
         yield seller.save();
-        // Populate for response only (not needed for saving)
-        yield seller.populate("userId", "fullName email");
+        yield seller.populate("userId", "fullName email role");
         res.status(201).json({
             message: "Seller account created successfully",
             seller,
+            updatedUser: user,
         });
     }
     catch (err) {
@@ -44,9 +48,10 @@ const createSellerAccount = (req, res) => __awaiter(void 0, void 0, void 0, func
 });
 exports.createSellerAccount = createSellerAccount;
 // Get all sellers
+// Get all sellers
 const getSellers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const sellers = yield seller_1.default.find();
+        const sellers = yield seller_1.default.find().populate("userId", "-password");
         res.status(200).json({ sellers });
     }
     catch (err) {
@@ -58,7 +63,7 @@ exports.getSellers = getSellers;
 // Get seller by ID
 const getSeller = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const seller = yield seller_1.default.findById(req.params.id);
+        const seller = yield seller_1.default.findById(req.params.id).populate("userId", "-password");
         if (!seller)
             return res.status(404).json({ message: "Seller not found" });
         res.status(200).json({ seller });
